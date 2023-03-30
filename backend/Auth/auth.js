@@ -72,13 +72,12 @@ exports.login = async (req, res, next) => {
         // comparing given password with hashed password
         bcrypt.compare(password, user.password).then(function (result) {
           if (result) {
-            const maxAge = 3 * 60 * 60;
             const token = jwt.sign({ id: user._id, email }, jwtSecret, {
-              expiresIn: maxAge, // 3hrs in sec
+              expiresIn: 3 * 60 * 60, // 3hrs in sec
             });
             res.cookie("jwt", token, {
               httpOnly: true,
-              maxAge: maxAge * 1000, // 3hrs in ms
+              maxAge: process.env.COOKIE_AGE * 1000 * 60 * 60, // 3hrs in ms
             });
             res.status(201).json({
               message: "User successfully Logged in",
@@ -133,3 +132,21 @@ exports.verify = async (req, res, next) => {
     })
     .catch((e) => console.log("error", e));
 };
+
+exports.logout = async (req, res, next) => {
+  req.user.deleteToken(req.token,(err,user)=>{
+    if(err) return res.status(400).send(err);
+    res.sendStatus(200);
+});
+};
+
+function verifyToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (token == null) return res.sendStatus(403);
+  jwt.verify(token, "secret_key", (err, user) => {
+  if (err) return res.sendStatus(404);
+  req.user = user;
+  next();
+  });
+  }

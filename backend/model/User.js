@@ -19,7 +19,6 @@ const UserSchema = new Mongoose.Schema({
   },
   token: {
     type: String,
-    minlength: 64,
     required: true,
   },
 });
