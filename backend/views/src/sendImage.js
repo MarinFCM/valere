@@ -1,8 +1,12 @@
+const form = document.querySelector("form");
 const fileElement = document.getElementById("customFile");
 const display = document.querySelector(".error");
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  display.textContent = "Gonna send!";
+
   if (fileElement.files.length === 0) {
     alert("please choose a file");
     return;
@@ -27,3 +31,16 @@ form.addEventListener("submit", async (e) => {
     console.log(err.message);
   }
 });
+
+async function logout() {
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "GET",
+    });
+    if (res.status === 200) {
+      location.assign("./");
+    }
+  } catch (err) {
+    console.log(err.message);
+  }
+}

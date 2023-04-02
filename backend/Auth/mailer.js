@@ -14,7 +14,6 @@ const transport = nodemailer.createTransport({
 });
 
 const sendConfirmationEmail = (email, confirmationCode) => {
-  //console.log("Check");
   transport
     .sendMail({
       from: user,
@@ -34,4 +33,24 @@ const sendConfirmationEmail = (email, confirmationCode) => {
   return true;
 };
 
-module.exports = { sendConfirmationEmail }
+const sendForgotEmail = (email, forgotToken, userId) => {
+  transport
+    .sendMail({
+      from: user,
+      to: email,
+      subject: "Reset your password",
+      html: `<h1>Password reset</h1>
+          <h2>Hello</h2>
+          <p>You requested a password reset. Please reset your password by clicking the following link</p>
+          <a href=http://localhost:5000/api/auth/reset/${forgotToken}/${userId}> Click here</a>
+          </div>`,
+    })
+    .catch((err) => {
+      console.log(err);
+      return false;
+    });
+
+  return true;
+};
+
+module.exports = { sendConfirmationEmail, sendForgotEmail }

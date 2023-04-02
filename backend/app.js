@@ -1,13 +1,13 @@
 const express = require("express");
 const connectDB = require("./db");
 const cookieParser = require("cookie-parser");
-const fileUpload = require("express-fileupload");
+//const fileUpload = require("express-fileupload");
 http = require("http");
-
+////
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-app.use(fileUpload());
+//app.use(fileUpload());
 
 const PORT = 5000;
 connectDB();
@@ -17,8 +17,8 @@ app.use("/api/file", require("./Classifier/routes"));
 
 app.set("views", `${__dirname}/views`);
 app.use(express.static(`${__dirname}/views`));
-app.engine('html', require('ejs').renderFile);
-app.set('view engine', 'html');
+app.engine("html", require("ejs").renderFile);
+app.set("view engine", "html");
 
 app.get("/", (req, res) => {
   res.render("index.html");

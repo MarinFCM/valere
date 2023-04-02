@@ -1,6 +1,11 @@
 const Mongoose = require("mongoose");
 
 const ForgotTokenSchema = new Mongoose.Schema({
+  userId: {
+    type: String,
+    unique: true,
+    required: true,
+  },
   email: {
     type: String,
     unique: true,
@@ -10,7 +15,6 @@ const ForgotTokenSchema = new Mongoose.Schema({
   },
   token: {
     type: String,
-    minlength: 64,
     required: true,
   },
   createdAt: {

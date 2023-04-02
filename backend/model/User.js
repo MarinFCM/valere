@@ -1,4 +1,6 @@
 const Mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 const UserSchema = new Mongoose.Schema({
   email: {
@@ -22,6 +24,15 @@ const UserSchema = new Mongoose.Schema({
     required: true,
   },
 });
+
+UserSchema.methods.deleteToken = function (token, cb) {
+  var user = this;
+
+  user.update({ $unset: { token: 1 } }, function (err, user) {
+    if (err) return cb(err);
+    cb(null, user);
+  });
+};
 
 const User = Mongoose.model("User", UserSchema, "user");
 

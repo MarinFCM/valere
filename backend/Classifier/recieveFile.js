@@ -1,11 +1,106 @@
-const path = require('path');
+const tf = require("@tensorflow/tfjs");
+const tfn = require("@tensorflow/tfjs-node");
+const fs = require("fs");
+const path = require("path");
+//const Jimp = require("jimp");
+const sharp = require("sharp");
+const multer = require("multer");
+
+loadModel().then(
+  (result) => (model = result), // shows "done!" after 1 second
+  (error) => {
+    throw error;
+  }
+);
+
+const checkFileType = function (file, cb) {
+  //Allowed file extensions
+  const fileTypes = /jpeg|jpg|png|gif|svg/; //check extension names
+
+  const extName = fileTypes.test(path.extname(file.originalname).toLowerCase());
+
+  const mimeType = fileTypes.test(file.mimetype);
+
+  if (mimeType && extName) {
+    return cb(null, true);
+  } else {
+    cb("Error: You can Only Upload Images!!");
+  }
+};
+
+const storageEngine = multer.diskStorage({
+  destination: "./Classifier/uploads",
+  filename: (req, file, cb) => {
+    cb(null, `${file.originalname}`);
+  },
+});
+
+exports.upload = multer({
+  storage: storageEngine,
+  limits: { fileSize: 10000000 },
+  fileFilter: (req, file, cb) => {
+    checkFileType(file, cb);
+  },
+});
 
 exports.recieveFile = async (req, res, next) => {
-  const file = req.files.upload;
-  const filePath = path.join(__dirname, "uploads", `${file.name}`);
+  const fileName = req.file.filename;
+  const filePath = path.join(__dirname, "uploads", `${fileName}`);
 
-  file.mv(filePath, (err) => {
-    if (err) return res.status(500).send(err);
-    return res.status(200).send({ message: "File uploaded!" });
-  });
+  imgBuffer = readImage(filePath);
+
+  sharp(imgBuffer)
+    .resize(28, 28)
+    .greyscale()
+    .toColourspace("b-w")
+    .toBuffer()
+    .then((buf) => {
+      runClassification(buf).then((pred) => {
+        res.status(200).json({ message: `${pred}` });
+        fs.unlink(filePath, (err => {
+          if (err) console.log(err);
+        }));
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 };
+
+const readImage = (path) => {
+  try {
+    imageBuffer = fs.readFileSync(path);
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      console.log("File not found!");
+    } else {
+      throw err;
+    }
+  }
+  return imageBuffer;
+};
+
+/*
+async function resize(buffer) {
+  const image = new Jimp(buffer);
+  image.resize(28, 28, function (err) {
+    if (err) throw err;
+  })
+  .greyscale();
+  //.write(imagePath);
+
+  return image.getBuffer();
+}
+*/
+
+async function runClassification(imageBuffer) {
+  const tfimage = tfn.node.decodeImage(imageBuffer);
+  const preds = model.predict(tfimage.expandDims(0)).argMax(-1);
+  return preds.data();
+}
+
+async function loadModel() {
+  const handler = tfn.io.fileSystem("../classificationModel/model.json");
+  const model = await tf.loadLayersModel(handler);
+  return model;
+}

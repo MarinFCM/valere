@@ -12,26 +12,35 @@
     />
   </head>
   <body>
-    <div class="w-100 align-items-center">
-      <p class="error text-center" style="color: red"></p>
+    <div class="container my-5 h-100">
+      <div class="row justify-content-sm-center h-100">
+        <div class="w-100 align-items-center">
+          <p class="error text-center" style="color: red"></p>
+        </div>
+        <div class="d-grid gap-3 w-25 align-middle">
+          <form name="upload" enctype="multipart/form-data">
+            <input
+              type="file"
+              class="form-control"
+              id="customFile"
+              name="upload"
+              accept=".jpg, .jpeg, .png"
+            />
+            <div class="d-grid align-items-center">
+              <button class="my-3" type="submit">Submit</button>
+            </div>
+          </form>
+
+          <div class="w-100 align-items-center">
+            <p class="error text-center" style="color: red; font-size: 200%;"></p>
+          </div>
+
+          <div class="d-grid align-items-center">
+            <button class="my-1" onclick="logout()">Logout</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <form method="post" enctype="multipart/form-data">
-      <div>
-        <label class="form-label" for="customFile"
-          >Default file input example</label
-        >
-        <input
-          type="file"
-          class="form-control"
-          id="customFile"
-          name="upload"
-          accept=".jpg, .jpeg, .png"
-        />
-      </div>
-      <div>
-        <button type="submit">Submit</button>
-      </div>
-    </form>
     <script src="src/sendImage.js"></script>
   </body>
 </html>
