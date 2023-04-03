@@ -17,7 +17,7 @@ router.route("/login").post(login);
 router.route("/verify/:token").get(verify);
 router.route("/forgot").post(forgot);
 router.route("/reset/:token/:id").post(reset);
-router.route("/reset/:token/:id").get(resetRend);
+router.route("/reset").get(resetRend);
 
 router.route("/logout").get(checkLoginStatus, logout);
 

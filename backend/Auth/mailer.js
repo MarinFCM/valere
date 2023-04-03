@@ -42,7 +42,7 @@ const sendForgotEmail = (email, forgotToken, userId) => {
       html: `<h1>Password reset</h1>
           <h2>Hello</h2>
           <p>You requested a password reset. Please reset your password by clicking the following link</p>
-          <a href=http://localhost:5000/api/auth/reset/${forgotToken}/${userId}> Click here</a>
+          <a href=http://localhost:5000/api/auth/reset?token=${forgotToken}&id=${userId}> Click here</a>
           </div>`,
     })
     .catch((err) => {

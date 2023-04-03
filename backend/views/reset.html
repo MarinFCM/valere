@@ -23,11 +23,15 @@
           <h1 class="text-center">Reset password</h1>
         </div>
 
+        <div class="w-100 align-items-center">
+          <p class="error text-center" style="color: red"></p>
+        </div>
+
         <div class="d-grid gap-3 w-25 align-middle">
           <form>
             <div class="mb-3 w-100">
               <div class="mb-2 w-100">
-                <label class="text-muted" for="password">New password</label>
+                <label class="text-muted">New password</label>
               </div>
 
               <input
@@ -51,6 +55,37 @@
       </div>
     </div>
 
-    <script src="src/reset.js"></script>
+    <script type="text/javascript">
+      const form = document.querySelector("form");
+      const password = document.querySelector("#password");
+      const display = document.querySelector(".error");
+
+      const myUrl = new URL(window.location.toLocaleString());
+      const urlParams = new URL(myUrl).searchParams;
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        display.textContent = "";
+        try {
+          const res = await fetch("/api/auth/reset/"+urlParams.get('token')+"/"+urlParams.get('id'), {
+            method: "POST",
+            body: JSON.stringify({ password: password.value }),
+            headers: { "Content-Type": "application/json" },
+          });
+          const data = await res.json();
+          if (res.status === 400 || res.status === 401) {
+            return (display.textContent = `${data.message}. ${
+              data.error ? data.error : ""
+            }`);
+          }
+          display.textContent = `${data.message}. ${
+            data.error ? data.error : ""
+          }`;
+          password.value = "";
+        } catch (err) {
+          console.log(err.message);
+        }
+      });
+    </script>
   </body>
 </html>

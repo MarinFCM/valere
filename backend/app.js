@@ -1,15 +1,16 @@
 const express = require("express");
 const connectDB = require("./db");
 const cookieParser = require("cookie-parser");
-//const fileUpload = require("express-fileupload");
-http = require("http");
-////
+const http = require("http");
+require("dotenv").config();
+const { checkLoginStatus } = require("./Auth/auth");
+
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-//app.use(fileUpload());
 
-const PORT = 5000;
+PORT = process.env.PORT;
+
 connectDB();
 
 app.use("/api/auth", require("./Auth/routes"));
@@ -21,11 +22,12 @@ app.engine("html", require("ejs").renderFile);
 app.set("view engine", "html");
 
 app.get("/", (req, res) => {
-  res.render("index.html");
+  res.render("index");
 });
 
-app.get("/image", (req, res) => {
-  res.render("image.html");
+app.get("/image", checkLoginStatus, (req, res) => {
+  if (req.email == null) res.render("error");
+  else res.render("image");
 });
 
 const server = app.listen(PORT, () =>

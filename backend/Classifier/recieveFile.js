@@ -2,20 +2,22 @@ const tf = require("@tensorflow/tfjs");
 const tfn = require("@tensorflow/tfjs-node");
 const fs = require("fs");
 const path = require("path");
-//const Jimp = require("jimp");
 const sharp = require("sharp");
 const multer = require("multer");
 
+if (!fs.existsSync("./Classifier/uploads")) {
+  fs.mkdirSync("./Classifier/uploads");
+}
+
 loadModel().then(
-  (result) => (model = result), // shows "done!" after 1 second
+  (result) => (model = result),
   (error) => {
     throw error;
   }
 );
 
 const checkFileType = function (file, cb) {
-  //Allowed file extensions
-  const fileTypes = /jpeg|jpg|png|gif|svg/; //check extension names
+  const fileTypes = /jpeg|jpg|png|svg/;
 
   const extName = fileTypes.test(path.extname(file.originalname).toLowerCase());
 
@@ -51,15 +53,16 @@ exports.recieveFile = async (req, res, next) => {
 
   sharp(imgBuffer)
     .resize(28, 28)
+    .removeAlpha()
     .greyscale()
     .toColourspace("b-w")
     .toBuffer()
     .then((buf) => {
       runClassification(buf).then((pred) => {
         res.status(200).json({ message: `${pred}` });
-        fs.unlink(filePath, (err => {
+        fs.unlink(filePath, (err) => {
           if (err) console.log(err);
-        }));
+        });
       });
     })
     .catch((err) => {
@@ -79,19 +82,6 @@ const readImage = (path) => {
   }
   return imageBuffer;
 };
-
-/*
-async function resize(buffer) {
-  const image = new Jimp(buffer);
-  image.resize(28, 28, function (err) {
-    if (err) throw err;
-  })
-  .greyscale();
-  //.write(imagePath);
-
-  return image.getBuffer();
-}
-*/
 
 async function runClassification(imageBuffer) {
   const tfimage = tfn.node.decodeImage(imageBuffer);

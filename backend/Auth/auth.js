@@ -6,25 +6,35 @@ const nodemailer = require("./mailer");
 const crypto = require("crypto");
 require("dotenv").config();
 
-//const jwtSecret =
-//  "4715aed3c946f7b0a38e6b534a9583628d84e96d10fbc04700770d572af3dce43625dd";
-
 exports.checkLoginStatus = (req, res, next) => {
-  let token = req.cookies.auth;
-  jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
-    if (err) console.log("error", e);
-    User.findOne({ _id: decoded, token: token })
-      .then((user) => {
-        req.token = token;
-        req.email = user.email;
+  if (req.cookies.auth === undefined) {
+    req.email = null;
+    next();
+  } else {
+    let token = req.cookies.auth;
+    jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
+      if (err) {
+        console.log("error", err);
+        req.email = null;
         next();
-      })
-      .catch((e) => console.log("error", e));
-  });
+      } else {
+        User.findOne({ _id: decoded, token: token })
+          .then((user) => {
+            req.token = token;
+            req.email = user.email;
+            next();
+          })
+          .catch((e) => {
+            console.log("error", e);
+            req.email = null;
+            next();
+          });
+      }
+    });
+  }
 };
 
 exports.register = async (req, res, next) => {
-  console.log(req.body);
   const { email, password } = req.body;
   if (password.length < 6) {
     return res.status(400).json({ message: "Password less than 6 characters" });
@@ -68,7 +78,6 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
-  // Check if email and password is provided
   if (!email || !password) {
     return res.status(400).json({
       message: "Email or Password not present",
@@ -160,13 +169,13 @@ exports.verify = async (req, res, next) => {
 exports.logout = async (req, res, next) => {
   User.findOneAndUpdate({ email: req.email }, { token: 1 })
     .then((user) => {
+      res.clearCookie("auth");
       return res.sendStatus(200);
     })
     .catch((e) => console.log("error", e));
 };
 
 exports.forgot = async (req, res, next) => {
-  console.log(req.body);
   User.findOne({ email: req.body.email })
     .then((user) => {
       let resetToken = crypto.randomBytes(32).toString("hex");
@@ -193,36 +202,50 @@ exports.forgot = async (req, res, next) => {
 };
 
 exports.resetRend = async (req, res, next) => {
+  ForgotToken.findOne({ userId: req.query.id })
+    .then((doc) => {
+      bcrypt.compare(req.query.token, doc.token).then((result) => {
+        if (result) {
+          res.render("reset.html");
+        } else {
+          res.status(400).json({ message: "Invalid reset link" });
+        }
+      });
+    })
+    .catch((err) => {
+      res.status(400).json({ message: "Invalid reset link" });
+    });
+};
+
+exports.reset = async (req, res, next) => {
   ForgotToken.findOne({ userId: req.params.id })
     .then((doc) => {
       bcrypt.compare(req.params.token, doc.token).then((result) => {
         if (result) {
-          res.render("reset");
+          User.findOne({ userId: req.params.id }).then((user) => {
+            bcrypt
+              .hash(req.body.password, 10)
+              .then((hash) => {
+                User.updateOne({ password: hash }).then(() => {
+                  res.status(200).json({ message: "Password updated" });
+                  ForgotToken.findOneAndDelete({ userId: req.params.id }).catch(
+                    (err) => {
+                      console.log(err);
+                    }
+                  );
+                });
+              })
+              .catch((err) => {
+                console.log(err);
+                res.status(400).json({ message: "An error has occured" });
+              });
+          });
         } else {
-          res.status(400).json({ message: "Invalid reset token" });
+          res.status(400).json({ message: "Invalid reset link" });
         }
       });
     })
-    .catch();
-};
-
-exports.reset = async (req, res, next) => {
-  console.log(req);
-  User.findOne({ userId: req.params.id }).then((user) => {
-    bcrypt.hash(req.body.password, 10).then((hash) => {
-      User.updateOne({ password: hash }).then(() => {
-        ForgotToken.findOneAndDelete(
-          { userId: req.params.id },
-          function (err, docs) {
-            if (err) {
-              console.log(err);
-            } else {
-              console.log("Deleted token");
-            }
-          }
-        );
-        res.status(200).json({ message: "Password updated" });
-      });
+    .catch((err) => {
+      res.status(400).json({ message: "Invalid reset link" });
     });
-  });
 };
