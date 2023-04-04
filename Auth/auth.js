@@ -109,7 +109,7 @@ exports.login = async (req, res, next) => {
               .then((user) => {
                 res.cookie("auth", token, {
                   httpOnly: true,
-                  maxAge: process.env.COOKIE_AGE * 1000 * 60 * 60,
+                  maxAge: 3 * 1000 * 60 * 60,
                 });
                 res.status(201).json({
                   message: "User successfully Logged in",
