@@ -5,10 +5,10 @@ const display = document.querySelector(".error");
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  display.textContent = "Gonna send!";
+  display.textContent = "Sending";
 
   if (fileElement.files.length === 0) {
-    alert("please choose a file");
+    display.textContent = "Please choose a file" ;
     return;
   }
 
