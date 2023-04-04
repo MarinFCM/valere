@@ -90,7 +90,7 @@ async function runClassification(imageBuffer) {
 }
 
 async function loadModel() {
-  const handler = tfn.io.fileSystem("../classificationModel/model.json");
+  const handler = tfn.io.fileSystem("./classificationModel/model.json");
   const model = await tf.loadLayersModel(handler);
   return model;
 }
